@@ -8,10 +8,6 @@ radio.onReceivedNumber(function (receivedNumber) {
     // Log serial number of collision satellite for identification.
     datalogger.log(datalogger.createCV("nearCollisionSats", radio.receivedPacket(RadioPacketProperty.SerialNumber)))
 })
-// Send remote signal to tell satellite whether or not it's parachuting.
-input.onButtonPressed(Button.A, function () {
-    radio.sendString("parachute")
-})
 // Log acceleration data during freefall in correct column.
 input.onGesture(Gesture.FreeFall, function () {
     basic.showIcon(IconNames.SmallSquare)
@@ -22,6 +18,18 @@ input.onGesture(Gesture.FreeFall, function () {
     }
     basic.showIcon(IconNames.Yes)
 })
+// Activate and deactivate motor, changing deployment stage at each point
+function deployRetract () {
+    deployed = !(deployed)
+    automationbit.setOutput(automationbit.Output.One, 1)
+    basic.pause(10630)
+    automationbit.setOutput(automationbit.Output.One, 0)
+    basic.pause(10630)
+    deployed = !(deployed)
+    automationbit.setOutput(automationbit.Output.One, 1)
+    basic.pause(10630)
+    automationbit.setOutput(automationbit.Output.One, 0)
+}
 // Determine whether parachuting or not from remote signal.
 radio.onReceivedString(function (receivedString) {
     if (receivedString == "parachute") {
@@ -29,16 +37,20 @@ radio.onReceivedString(function (receivedString) {
     } else {
         if (receivedString == "noParachute") {
             parachuting = 0
+        } else {
+            if (receivedString == "deploy") {
+                deployRetract()
+            }
         }
     }
 })
-input.onButtonPressed(Button.B, function () {
-    radio.sendString("noParachute")
-})
+let deployed = false
 let parachuting = 0
+automationbit.setOutput(automationbit.Output.One, 0)
 // Group 10 for collision detection
 radio.setGroup(10)
 parachuting = 1
+deployed = false
 basic.showIcon(IconNames.Yes)
 // Initialize data collection for acceleration and sattelites that near collision
 datalogger.setColumnTitles(
@@ -46,6 +58,14 @@ datalogger.setColumnTitles(
 "accelerationNoPara",
 "nearCollisionSats"
 )
+basic.forever(function () {
+    if (deployed) {
+        basic.showString("D")
+    } else {
+        basic.showString("C")
+    }
+})
+// Send number for collision detection
 basic.forever(function () {
     radio.sendNumber(1)
 })

@@ -30,7 +30,7 @@ input.onButtonPressed(Button.B, function () {
     radio.sendString("noParachute")
 })
 let parachuting = 0
-radio.setGroup(199)
+radio.setGroup(10)
 parachuting = 1
 basic.showIcon(IconNames.Yes)
 datalogger.setColumnTitles(
